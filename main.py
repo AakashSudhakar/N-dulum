@@ -10,11 +10,11 @@ USAGE:          Run in CLI with command `python3 main.py`.
 Credit goes to Jake VanderPlas, Gilbert Gede, and user @christian on SciPython 
 for composing beautiful Python projects tackling similar complex pendulum-based 
 simulations. Your work was invaluable to my understanding and implementation 
-of the N-dulum project. 
+of the N-dulum project.
 
 Special thanks to Alan Davis, Mike Kane, Milad Toutounchian, and many other 
 instructors and fellow students at the Make School Product College for their 
-feedback, suggestions, and continued support. 
+feedback, suggestions, and continued support.
 
 (C) October 2018
 """
