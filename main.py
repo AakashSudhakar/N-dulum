@@ -38,13 +38,13 @@ from time import time                           # Modular Runtime Tracker
 
 
 ################################################################################
-###### IMPORT STATEMENTS FOR SIMULATION MODELING AND ADVANCED MATHEMATICS ######
+######################## NTH-ORDER PENDULUM CLASS OBJECT #######################
 ################################################################################
 
 
 class Nth_Order_Pendulum_Simulator(object):
     
-    # COMPLETE? NEED TO BE CAREFUL WITH INSTANCE VARIABLES
+    # COMPLETE
     def __init__(self, N):
         self.N = N                                      # Required input argument
         self.time_vector = np.linspace(0, 10, 1000)     # Defaults to linspace() arg
