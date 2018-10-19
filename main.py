@@ -5,6 +5,7 @@ AUTHOR:         Aakash Sudhakar
 DESCRIPTION:    A physics-based simulation in Python attempting to codify and 
                 animate an Nth-order pendulum based on user input and advanced
                 differential mathematics.
+USAGE:          Run in CLI with command `python3 main.py`. 
 
 Credit goes to Jake VanderPlas, Gilbert Gede, and user @christian on SciPython 
 for composing beautiful Python projects tackling similar complex pendulum-based 
@@ -212,7 +213,7 @@ class Nth_Order_Pendulum_Simulator(object):
             anim_obj.save(curr_anim_loc)
         return anim_obj
     
-    # INCOMPLETE
+    # COMPLETE
     def animate_multiple_pendulums_with_tracers(self, number_of_pendulums=12, perturbation=1E-6, tracer_length=15, to_save=False):
         oversample = 3
         tracer_length *= oversample
@@ -273,12 +274,27 @@ class Nth_Order_Pendulum_Simulator(object):
 
 
 def main():
-    triple_pendulum = Nth_Order_Pendulum_Simulator(N=3)
-    ap_vector = triple_pendulum.integrate_pendulum_odes()
-    # triple_pendulum.visualize_timewise_displacement(ap_vector)
-    # triple_pendulum.get_xy_displacement(ap_vector, to_viz=True)
-    # anim_obj = triple_pendulum.animate_nth_order_pendulum(to_save=True)
-    anim_obj = triple_pendulum.animate_multiple_pendulums_with_tracers(to_save=True)
+    print("\n\nWELCOME TO THE n-DULUM PROJECT.\n\n")
+    order = int(input("ENTER IN A SMALL INTEGER AND WITNESS TRUE CHAOS...\n\n>>>>    "))
+    is_time_graph = str(input("\n\nWOULD YOU LIKE TO SEE A TIMEWISE DISPLACEMENT GRAPH? (y|n)\n\n>>>>    "))
+    is_pos_graph = str(input("\n\nWOULD YOU LIKE TO SEE A POSITIONAL DISPLACEMENT GRAPH? (y|n)\n\n>>>>    "))
+    one_or_many = int(input("\n\nWOULD YOU LIKE TO SEE ONE n-DULUM OR MANY?\n\n\n  1. One\n  2. Many\n\n>>>>    "))
+    
+    n_dulum = Nth_Order_Pendulum_Simulator(N=order)
+    ap_vector = n_dulum.integrate_pendulum_odes()
+    
+    if is_time_graph == "y" or is_time_graph == "Y":
+        n_dulum.visualize_timewise_displacement(ap_vector)
+        
+    if is_pos_graph == "y" or is_pos_graph == "Y":
+        n_dulum.get_xy_displacement(ap_vector, to_viz=True)
+        
+    if one_or_many == 1:
+        n_dulum.animate_nth_order_pendulum(to_save=True)
+    elif one_or_many == 2:
+        n_dulum.animate_multiple_pendulums_with_tracers(to_save=True)
+        
+    print("\n\nFAREWELL.\n")
     
 if __name__ == "__main__":
     main()
