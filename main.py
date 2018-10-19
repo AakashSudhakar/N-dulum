@@ -49,11 +49,10 @@ class Nth_Order_Pendulum_Simulator(object):
         self.time_vector = np.linspace(0, 10, 1000)     # Defaults to linspace() arg
         self.pos_init = 235                             # Defaults to int(235)
         self.vel_init = 0                               # Defaults to int(0)
-        self.length_vector = None                       # Defaults to None
         self.mass_vector = 1                            # Defaults to int(1)
     
     # COMPLETE
-    def integrate_pendulum_odes(self):
+    def integrate_pendulum_odes(self, adv_time_vector=None, pos_init=235):
         """
         Method to integrate Nth-order pendulum ODEs.
         """
@@ -97,12 +96,11 @@ class Nth_Order_Pendulum_Simulator(object):
         fr, frstar = kane.kanes_equations(particles, forces)
 
         # Creates vector for initial positions and velocities
-        y0 = np.deg2rad(np.concatenate([np.broadcast_to(self.pos_init, self.N), 
+        y0 = np.deg2rad(np.concatenate([np.broadcast_to(pos_init, self.N), 
                                         np.broadcast_to(self.vel_init, self.N)]))
 
         # Creates vectors for pendulum segment lengths and masses
-        if self.length_vector is None:
-            length_vector = np.ones(self.N) / self.N
+        length_vector = np.ones(self.N) / self.N
         length_vector = np.broadcast_to(length_vector, self.N)
         self.mass_vector = np.broadcast_to(self.mass_vector, self.N)
 
@@ -131,14 +129,17 @@ class Nth_Order_Pendulum_Simulator(object):
             values = np.concatenate((y, args))
             solutions = np.linalg.solve(mm_func(*values), ff_func(*values))
             return np.array(solutions).T[0]
-
-        return odeint(__parametric_gradient_function, y0, self.time_vector, args=(param_vals,))
+        
+        if adv_time_vector is None:
+            return odeint(__parametric_gradient_function, y0, self.time_vector, args=(param_vals,))
+        else:
+            return odeint(__parametric_gradient_function, y0, adv_time_vector, args=(param_vals,))
     
-    # INCOMPLETE
+    # COMPLETE
     def visualize_timewise_displacement(self, ap_vector):
         """
         Method to visualize positional displacement over time.
-        """
+        """        
         fig, ax = subplots(2, sharex=True, sharey=False)
         fig.set_size_inches(6.5, 6.5)
 
@@ -156,17 +157,16 @@ class Nth_Order_Pendulum_Simulator(object):
         setp(ax[0].get_xticklabels(), visible=False)
         tight_layout()
         show()
+        return
     
-    # INCOMPLETE
+    # COMPLETE
     def get_xy_displacement(self, ap_vector, to_viz=False):
         """
         Method to get positional displacement in coordinate-matrix or visualization form.
         """
         ap_vector = np.atleast_2d(ap_vector)
         n = ap_vector.shape[1] // 2
-
-        if self.length_vector is None:
-            length_vector = np.ones(n) / n
+        length_vector = np.ones(n) / n
 
         zeros_vector = np.zeros(ap_vector.shape[0])[:, None]
         x = np.hstack([zeros_vector, length_vector * np.sin(ap_vector[:, :n])])
@@ -179,13 +179,13 @@ class Nth_Order_Pendulum_Simulator(object):
             return np.cumsum(x, 1), np.cumsum(y, 1)
         else:
             plt.plot(np.cumsum(x, 1), np.cumsum(y, 1))
+            show()
             return
     
     # INCOMPLETE
-    def animate_nth_order_pendulum(N, tracer_length=None):
-        start_pos, time_vector = randrange(120, 240, 1), np.linspace(0, 10, 1000)
-        ap_vector = integrate_pendulum(N=N, time_vector=time_vector, pos_init=start_pos)
-        x, y = get_xy_displacement(ap_vector)
+    def animate_nth_order_pendulum(self, tracer_length=None, to_save=False):
+        ap_vector = self.integrate_pendulum_odes()
+        x, y = self.get_xy_displacement(ap_vector)
 
         fig, ax = plt.subplots(figsize=(6, 6))
         fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
@@ -202,21 +202,25 @@ class Nth_Order_Pendulum_Simulator(object):
             line.set_data(x[iterator], y[iterator])
             return line,
 
-        anim_obj = animation.FuncAnimation(fig, animate_, frames=len(time_vector),
-                                           interval=1000 * time_vector.max() / len(time_vector),
+        anim_obj = animation.FuncAnimation(fig, animate_, frames=len(self.time_vector),
+                                           interval=1000 * self.time_vector.max() / len(self.time_vector),
                                            blit=True, init_func=_init_)
         plt.close(fig)
+        
+        if to_save is True:
+            curr_anim_loc = "animations/single/pendulum_model_order-{}_single.mp4".format(self.N)
+            anim_obj.save(curr_anim_loc)
         return anim_obj
     
     # INCOMPLETE
-    def animate_multiple_pendulums_with_tracers(N, number_of_pendulums=12, perturbation=1E-6, tracer_length=15):
+    def animate_multiple_pendulums_with_tracers(self, number_of_pendulums=12, perturbation=1E-6, tracer_length=15, to_save=False):
         oversample = 3
         tracer_length *= oversample
-
-        time_vector = np.linspace(0, 10, oversample * 200)
-        ap_vector = [integrate_pendulum(N, time_vector, pos_init=135 + iterator * perturbation / number_of_pendulums)
+        adv_time_vector = np.linspace(0, 10, oversample * 200)
+        
+        ap_vector = [self.integrate_pendulum_odes(adv_time_vector, pos_init=135+iterator*perturbation/number_of_pendulums)
                     for iterator in range(number_of_pendulums)]
-        pos_vector = np.array([get_xy_displacement(pos) for pos in ap_vector])
+        pos_vector = np.array([self.get_xy_displacement(pos) for pos in ap_vector])
         pos_vector = pos_vector.transpose(0, 2, 3, 1)
 
         fig, ax = plt.subplots(figsize=(6, 6))
@@ -250,12 +254,16 @@ class Nth_Order_Pendulum_Simulator(object):
             points.set_data(x, y)
             return pendulum_collection, tracer_collection, points
 
-        interval = 1000 * oversample * time_vector.max() / len(time_vector)
-        anim_obj = animation.FuncAnimation(fig, animate_, frames=len(time_vector) // oversample,
+        interval = 1000 * oversample * adv_time_vector.max() / len(adv_time_vector)
+        anim_obj = animation.FuncAnimation(fig, animate_, frames=len(adv_time_vector) // oversample,
                                        interval=interval,
                                        blit=True, init_func=_init_)
 
         plt.close(fig)
+        
+        if to_save is True:
+            curr_anim_loc = "animations/many/pendulum_model_order-{}_many.mp4".format(self.N)
+            anim_obj.save(curr_anim_loc)
         return anim_obj
 
 
@@ -267,10 +275,10 @@ class Nth_Order_Pendulum_Simulator(object):
 def main():
     triple_pendulum = Nth_Order_Pendulum_Simulator(N=3)
     ap_vector = triple_pendulum.integrate_pendulum_odes()
-    triple_pendulum.visualize_timewise_displacement(ap_vector)
-    # triple_pendulum.get_xy_displacement(ap_vector)
+    # triple_pendulum.visualize_timewise_displacement(ap_vector)
     # triple_pendulum.get_xy_displacement(ap_vector, to_viz=True)
-
+    anim_obj = triple_pendulum.animate_nth_order_pendulum(to_save=True)
+    
 if __name__ == "__main__":
     main()
     
