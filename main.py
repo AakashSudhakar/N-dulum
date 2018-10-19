@@ -182,7 +182,7 @@ class Nth_Order_Pendulum_Simulator(object):
             show()
             return
     
-    # INCOMPLETE
+    # COMPLETE
     def animate_nth_order_pendulum(self, tracer_length=None, to_save=False):
         ap_vector = self.integrate_pendulum_odes()
         x, y = self.get_xy_displacement(ap_vector)
@@ -225,7 +225,7 @@ class Nth_Order_Pendulum_Simulator(object):
 
         fig, ax = plt.subplots(figsize=(6, 6))
         fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-        ax.axis('off')
+        ax.axis("off")
         ax.set(xlim=(-1, 1), ylim=(-1, 1))
 
         tracer_segments = np.zeros((number_of_pendulums, 0, 2))
@@ -277,7 +277,8 @@ def main():
     ap_vector = triple_pendulum.integrate_pendulum_odes()
     # triple_pendulum.visualize_timewise_displacement(ap_vector)
     # triple_pendulum.get_xy_displacement(ap_vector, to_viz=True)
-    anim_obj = triple_pendulum.animate_nth_order_pendulum(to_save=True)
+    # anim_obj = triple_pendulum.animate_nth_order_pendulum(to_save=True)
+    anim_obj = triple_pendulum.animate_multiple_pendulums_with_tracers(to_save=True)
     
 if __name__ == "__main__":
     main()
