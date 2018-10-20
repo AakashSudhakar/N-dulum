@@ -16,7 +16,7 @@ Special thanks to Alan Davis, Mike Kane, Milad Toutounchian, and many other
 instructors and fellow students at the Make School Product College for their 
 feedback, suggestions, and continued support.
 
-(C) October 2018
+(C) October, 2018.
 """
 
 ################################################################################
@@ -43,9 +43,14 @@ from time import time                           # Modular Runtime Tracker
 
 
 class Nth_Order_Pendulum_Simulator(object):
-    
-    # COMPLETE
+
     def __init__(self, N):
+        """
+        Internal method to initialize class object instance.
+
+        ARGS:       {N}                     [int()]
+        RETURN:     None()
+        """
         self.N = N                                      # Required input argument
         self.time_vector = np.linspace(0, 10, 1000)     # Defaults to linspace() arg
         self.pos_init = 235                             # Defaults to int(235)
@@ -56,6 +61,10 @@ class Nth_Order_Pendulum_Simulator(object):
     def integrate_pendulum_odes(self, adv_time_vector=None, pos_init=235):
         """
         Method to integrate Nth-order pendulum ODEs.
+
+        ARGS:       {adv_time_vector}       [np.linspace()]
+                    {pos_init}              [int()]
+        RETURN:     {odeint()}
         """
         
         # Instantiates physics constants for position, velocity, mass, length, gravity, and time
@@ -126,56 +135,77 @@ class Nth_Order_Pendulum_Simulator(object):
         def __parametric_gradient_function(y, t, args):
             """
             Helper function to derive first-order equations of motion from parametric arguments.
+
+            ARGS:       {y}                     [np.array()]
+                        {t}                     [np.linspace()]
+                        {args}                  [tuple(obj())]
+            RETURN:     {np.array()}
             """
             values = np.concatenate((y, args))
             solutions = np.linalg.solve(mm_func(*values), ff_func(*values))
             return np.array(solutions).T[0]
         
+        # Returns integrated ODEs for equations of motion of pendulums
         if adv_time_vector is None:
             return odeint(__parametric_gradient_function, y0, self.time_vector, args=(param_vals,))
         else:
             return odeint(__parametric_gradient_function, y0, adv_time_vector, args=(param_vals,))
     
-    # COMPLETE
     def visualize_timewise_displacement(self, ap_vector):
         """
         Method to visualize positional displacement over time.
-        """        
+
+        ARGS:       {ap_vector}             [integrate_pendulum_odes()]
+        RETURN:     None()
+        """
+        # Initializes MatPlotLib plotting objects with predefined params
         fig, ax = subplots(2, sharex=True, sharey=False)
         fig.set_size_inches(6.5, 6.5)
 
+        # Imposes positional and velocity displacement per time vector into MatPlotLib plotting objects
         for iterator in range(self.N):
             ax[0].plot(self.time_vector, ap_vector[:, iterator], label="$q_{}$".format(iterator))
             ax[1].plot(self.time_vector, ap_vector[:, iterator + self.N], label="$u_{}$".format(iterator))
 
+        # Defines plotting legends for each pendulum object
         ax[0].legend(loc=0)
         ax[1].legend(loc=0)
+
+        # Defines X- and Y-labels for plotting objects
         ax[1].set_xlabel("Time (s)")
         ax[0].set_ylabel("Angle (rad)")
         ax[1].set_ylabel("Angular rate (rad/s)")
 
+        # Polishes and displays plotting objects
         fig.subplots_adjust(hspace=0)
         setp(ax[0].get_xticklabels(), visible=False)
         tight_layout()
         show()
         return
     
-    # COMPLETE
     def get_xy_displacement(self, ap_vector, to_viz=False):
         """
         Method to get positional displacement in coordinate-matrix or visualization form.
+
+        ARGS:       {ap_vector}             [integrate_pendulum_odes()]
+                    {to_viz}                [bool()]
+        RETURN:     {None()}
         """
+        # Reshapes input equations-of-motions vector and defines size and length vector objects
         ap_vector = np.atleast_2d(ap_vector)
         n = ap_vector.shape[1] // 2
         length_vector = np.ones(n) / n
 
+        # Creates zeros vector for NumPy object stacking
         zeros_vector = np.zeros(ap_vector.shape[0])[:, None]
         x = np.hstack([zeros_vector, length_vector * np.sin(ap_vector[:, :n])])
         y = np.hstack([zeros_vector, -length_vector * np.cos(ap_vector[:, :n])])
 
+        # Defines X- and Y-labels for plotting object
         plt.xlabel("X-Position")
         plt.ylabel("Y-Position")
 
+        # Returns cumulative X- and Y-data or plotted X-Y visualization based on user input
         if to_viz is False:
             return np.cumsum(x, 1), np.cumsum(y, 1)
         else:
@@ -183,8 +213,13 @@ class Nth_Order_Pendulum_Simulator(object):
             show()
             return
     
-    # COMPLETE
     def animate_nth_order_pendulum(self, tracer_length=None, to_save=False):
+        """
+        Method to create MatPlotLib animation of Nth-order pendulum object. 
+
+        ARGS:       {tracer_length}         []
+                    {to_save}       
+        """
         ap_vector = self.integrate_pendulum_odes()
         x, y = self.get_xy_displacement(ap_vector)
 
