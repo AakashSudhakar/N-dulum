@@ -220,6 +220,7 @@ class Nth_Order_Pendulum_Simulator(object):
 
         ARGS:       {tracer_length}         [int() or None()]
                     {to_save}               [bool()]
+        RETURN:     {anim_obj}              [matplotlib.animation.FuncAnimation()]
         """
         # Grabs X- and Y-positional data from integrated ODEs
         ap_vector = self.integrate_pendulum_odes()
@@ -268,22 +269,36 @@ class Nth_Order_Pendulum_Simulator(object):
             anim_obj.save(curr_anim_loc)
         return anim_obj
     
-    # COMPLETE
     def animate_multiple_pendulums_with_tracers(self, number_of_pendulums=12, perturbation=1E-6, tracer_length=15, to_save=False):
+        """
+        Method to create MatPlotLib animation with multiple pendulum objects demonstrating chaotic movement.
+
+        ARGS:       {number_of_pendulums}   [int()]
+                    {perturbation}          [float()]
+                    {tracer_length}         [int()]
+                    {to_save}               [bool()]
+        RETURN:     {anim_obj}              [matplotlib.animation.FuncAnimation()]
+        """
+        # Creates necessary parameters for pendulum tracer functionality
         oversample = 3
         tracer_length *= oversample
         adv_time_vector = np.linspace(0, 10, oversample * 200)
         
+        # Recreates integrated ODE vector for individual chaos simulations with tracer functionality
         ap_vector = [self.integrate_pendulum_odes(adv_time_vector, pos_init=135+iterator*perturbation/number_of_pendulums)
                     for iterator in range(number_of_pendulums)]
+
+        # Grabs tracer positions from X-Y displacements across integrated ODEs
         pos_vector = np.array([self.get_xy_displacement(pos) for pos in ap_vector])
         pos_vector = pos_vector.transpose(0, 2, 3, 1)
 
+        # Initializes MatPlotLib plotting objects
         fig, ax = plt.subplots(figsize=(6, 6))
         fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
         ax.axis("off")
         ax.set(xlim=(-1, 1), ylim=(-1, 1))
 
+        # Creates tracer segments and collected object from pendulum data and sends to plotting object
         tracer_segments = np.zeros((number_of_pendulums, 0, 2))
         tracer_collection = collections.LineCollection(tracer_segments, cmap="rainbow")
         tracer_collection.set_array(np.linspace(0, 1, number_of_pendulums))
@@ -295,12 +310,14 @@ class Nth_Order_Pendulum_Simulator(object):
         pendulum_collection = collections.LineCollection(pendulum_segments, colors="black")
         ax.add_collection(pendulum_collection)
 
+        # Creates helper function to initialize MatPlotLib animation function
         def _init_():
             pendulum_collection.set_segments(np.zeros((number_of_pendulums, 0, 2)))
             tracer_collection.set_segments(np.zeros((number_of_pendulums, 0, 2)))
             points.set_data(list(), list())
             return pendulum_collection, tracer_collection, points
 
+        # Creates helper function to guide MatPlotLib animation function with appropriate object recognition
         def animate_(iterator):
             iterator *= oversample
             pendulum_collection.set_segments(pos_vector[:, iterator])
