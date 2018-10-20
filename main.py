@@ -197,6 +197,7 @@ class Nth_Order_Pendulum_Simulator(object):
         length_vector = np.ones(n) / n
 
         # Creates zeros vector for NumPy object stacking
+        # NOTE: .hstack() using horizontal stacking to concatenate zeros_vector with length_vector and trig() vector
         zeros_vector = np.zeros(ap_vector.shape[0])[:, None]
         x = np.hstack([zeros_vector, length_vector * np.sin(ap_vector[:, :n])])
         y = np.hstack([zeros_vector, -length_vector * np.cos(ap_vector[:, :n])])
@@ -217,32 +218,51 @@ class Nth_Order_Pendulum_Simulator(object):
         """
         Method to create MatPlotLib animation of Nth-order pendulum object. 
 
-        ARGS:       {tracer_length}         []
-                    {to_save}       
+        ARGS:       {tracer_length}         [int() or None()]
+                    {to_save}               [bool()]
         """
+        # Grabs X- and Y-positional data from integrated ODEs
         ap_vector = self.integrate_pendulum_odes()
         x, y = self.get_xy_displacement(ap_vector)
 
+        # Initializes MatPlotLib plotting objects
         fig, ax = plt.subplots(figsize=(6, 6))
         fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
         ax.axis("off")
         ax.set(xlim=(-1, 1), ylim=(-1, 1))
 
+        # Defines scalar linear object from empty plot
         line, = ax.plot(list(), list(), "o-", lw=2)
 
+        # Creates helper function to initialize MatPlotLib animation function
         def _init_():
+            """
+            Internal helper method to initialize MatPlotLib animation function.
+
+            ARGS:       None()
+            RETURN:     {line}                  [np.array()]
+            """
             line.set_data(list, list)
             return line,
 
+        # Creates helper function to guide MatPlotLib animation function with appropriate object recognition
         def animate_(iterator):
+            """
+            Helper method to guide animation functionality of MatPlotLib. 
+
+            ARGS:       {iterator}              [int()]
+            RETURN:     {line}                  [np.array()]
+            """
             line.set_data(x[iterator], y[iterator])
             return line,
 
+        # Creates animation object that stores pendulum object movement with appropriate physics
         anim_obj = animation.FuncAnimation(fig, animate_, frames=len(self.time_vector),
                                            interval=1000 * self.time_vector.max() / len(self.time_vector),
                                            blit=True, init_func=_init_)
         plt.close(fig)
         
+        # Saves animation object to playable multimedia and returns to user
         if to_save is True:
             curr_anim_loc = "animations/single/pendulum_model_order-{}_single.mp4".format(self.N)
             anim_obj.save(curr_anim_loc)
